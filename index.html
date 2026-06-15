@@ -42,8 +42,8 @@
 <script type="text/babel">
 
 const BERRY   = '#8B1F58';
-const MIMI_BG = 'linear-gradient(175deg, #FDF9FF 0%, #F4E9FE 45%, #ECDFFB 100%)';
-const SAFE_BG = 'linear-gradient(175deg, #F4FBF7 0%, #E7F6ED 45%, #DBF1E3 100%)';
+const MIMI_BG = 'linear-gradient(175deg, #FFFFFF 0%, #FBF7FE 50%, #F6EEFC 100%)';
+const SAFE_BG = 'linear-gradient(175deg, #FFFFFF 0%, #F3FAF6 50%, #EAF7EF 100%)';
 const glassCard  = { background:'rgba(139,31,88,.05)', border:'1px solid rgba(139,31,88,.12)', boxShadow:'inset 0 1px 0 rgba(255,255,255,.6)', backdropFilter:'blur(8px)', borderRadius:16 };
 const glassInput = { background:'#ffffff', border:'1px solid rgba(139,31,88,.18)', boxShadow:'inset 0 1px 0 rgba(255,255,255,.7)', backdropFilter:'blur(4px)' };
 const IF = "'Inter', sans-serif";
@@ -550,7 +550,7 @@ function CallControlBtn({ icon, label }) {
 // AlertScreen state machine (embedded inside call screen)
 const ALERT_STATES = {
   alert:    { id:'alert',    bg:MIMI_BG,                                                              badge:{label:'SCAM DETECTED',bg:BERRY,    iconType:'warning'}, titleLines:["This caller","is not","the IRS."], body:"The caller is posing as the IRS and is trying to steal your money. It's ok to just hang up.", primary:{label:'I ended the call',         bg:BERRY,    color:'#fff',height:64}, secondary:{label:'Keep listening',        color:'#2A1F3D',height:56} },
-  escalated:{ id:'escalated',bg:'linear-gradient(175deg, #FFF6F6 0%, #FDE4E4 45%, #FBD2D2 100%)',     badge:{label:'HIGH RISK',    bg:'#B91C1C', iconType:'warning'}, titleLines:["Please end","this call","now."],      body:"They are asking for money or your bank details. Do not give any information.",  primary:{label:'End this call',            bg:'#DC2626', color:'#fff',height:72}, secondary:null },
+  escalated:{ id:'escalated',bg:'linear-gradient(175deg, #FFFFFF 0%, #FFF6F6 50%, #FEEAEA 100%)',     badge:{label:'HIGH RISK',    bg:'#B91C1C', iconType:'warning'}, titleLines:["Please end","this call","now."],      body:"They are asking for money or your bank details. Do not give any information.",  primary:{label:'End this call',            bg:'#DC2626', color:'#fff',height:72}, secondary:null },
   resolved: { id:'resolved', bg:SAFE_BG,                                                              badge:{label:"YOU'RE SAFE",  bg:'#16A34A', iconType:'check'},   titleLines:["Good call,","you stayed","safe."],    body:"We've logged this number. Did you share any personal information?",             primary:{label:'I shared some information', bg:'#16A34A', color:'#fff',height:64}, secondary:{label:"All good — dismiss",    color:'#2A1F3D',height:56} },
 };
 
