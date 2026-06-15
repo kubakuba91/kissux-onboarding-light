@@ -566,15 +566,15 @@ function MimiAlert({ onEnd, initialKey, onKeepListening }) {
     <div style={{ width:'100%', height:'100%', background:s.bg, display:'flex', flexDirection:'column', padding:'36px 0 0', overflow:'hidden', transition:'background .4s ease' }}>
       <div style={{ flex:1, display:'flex', flexDirection:'column', padding:'0 24px', justifyContent:'center' }}>
         <div style={{ marginBottom:32, display:'flex', justifyContent:'center' }}>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:s.badge.bg, borderRadius:999, padding:'8px 18px 8px 12px', border:'1px solid rgba(42,30,64,.22)', boxShadow:'inset 0 1px 0 rgba(42,30,64,.12)', backdropFilter:'blur(4px)' }}>
-            {s.badge.iconType==='check' ? <CheckCircleIcon size={18} color="#fff"/> : <WarningCircleIcon size={18} color="#fff"/>}
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:s.badge.bg, borderRadius:999, padding:'10px 20px 10px 14px', border:'1px solid rgba(42,30,64,.22)', boxShadow:'inset 0 1px 0 rgba(42,30,64,.12)', backdropFilter:'blur(4px)' }}>
+            {s.badge.iconType==='check' ? <CheckCircleIcon size={26} color="#fff"/> : <WarningCircleIcon size={26} color="#fff"/>}
             <span style={{ color:'#fff', fontSize:12, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', fontFamily:IF }}>{s.badge.label}</span>
           </div>
         </div>
         <div style={{ marginBottom:28, textAlign:'center' }}>
           {s.titleLines.map((l,i) => <div key={i} style={{ display:'block', color:'#2A1F3D', fontSize:66, fontWeight:800, lineHeight:1.04, letterSpacing:'-.035em', fontFamily:IF }}>{l}</div>)}
         </div>
-        <div style={{ color:'rgba(42,30,64,.58)', fontSize:18, lineHeight:1.5, fontFamily:IF, textAlign:'center' }}>{s.body}</div>
+        <div style={{ color:'rgba(42,30,64,.9)', fontSize:20, lineHeight:1.5, fontFamily:IF, textAlign:'center' }}>{s.body}</div>
       </div>
       <div style={{ padding:'0 20px 28px', display:'flex', flexDirection:'column', gap:4 }}>
         <div style={{ height:1, background:'rgba(42,30,64,.1)', marginBottom:20 }}/>
