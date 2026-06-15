@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mimi &middot; KissUX SSOS &mdash; Click-through demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #FBF6FE; font-family: 'Inter', -apple-system, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 56px 24px 64px; }
+  .ph { margin-bottom: 36px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .ph .ey { color: #2A1F3D; font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.4; }
+  .ph h1 { color: #2A1F3D; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  .ph p { color: rgba(42,30,64,0.45); font-size: 14px; line-height: 1.55; max-width: 380px; margin-top: 2px; }
+  .fr { display: flex; flex-direction: column; align-items: center; gap: 18px; margin-top: 28px; }
+  .rl { display: inline-flex; align-items: center; gap: 7px; color: rgba(42,30,64,0.5); font-size: 13px; font-weight: 600; cursor: pointer; transition: color 0.15s; user-select: none; }
+  .rl:hover { color: rgba(42,30,64,0.85); }
+  ::-webkit-scrollbar { display: none; }
+
+  @keyframes orb-pulse  { 0%,100%{transform:scale(1);opacity:.55} 50%{transform:scale(1.14);opacity:.18} }
+  @keyframes orb-pulse2 { 0%,100%{transform:scale(1);opacity:.35} 50%{transform:scale(1.28);opacity:.08} }
+  @keyframes shield-breathe { 0%,100%{filter:drop-shadow(0 0 10px rgba(22,163,74,.35))} 50%{filter:drop-shadow(0 0 22px rgba(22,163,74,.55))} }
+
+  /* Incoming call notification */
+  @keyframes notif-drop { from{transform:translateY(-110%);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes answer-ring {
+    0%,100%{box-shadow:0 0 0 0 rgba(22,163,74,.5)}
+    60%{box-shadow:0 0 0 10px rgba(22,163,74,0)}
+  }
+
+  /* Mimi alert taking over the call screen */
+  @keyframes mimi-takeover { from{transform:translateY(100%)} to{transform:translateY(0)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const BERRY   = '#8B1F58';
+const MIMI_BG = 'linear-gradient(175deg, #FDF9FF 0%, #F4E9FE 45%, #ECDFFB 100%)';
+const SAFE_BG = 'linear-gradient(175deg, #F4FBF7 0%, #E7F6ED 45%, #DBF1E3 100%)';
+const glassCard  = { background:'rgba(139,31,88,.05)', border:'1px solid rgba(139,31,88,.12)', boxShadow:'inset 0 1px 0 rgba(255,255,255,.6)', backdropFilter:'blur(8px)', borderRadius:16 };
+const glassInput = { background:'#ffffff', border:'1px solid rgba(139,31,88,.18)', boxShadow:'inset 0 1px 0 rgba(255,255,255,.7)', backdropFilter:'blur(4px)' };
+const IF = "'Inter', sans-serif";
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+function ShieldIcon({ size=18, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill={color}/></svg>; }
+function WarningCircleIcon({ size=16, color='#FCA5A5' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" fill="none"/><path d="M12 7v5M12 15.5v1" stroke={color} strokeWidth="2" strokeLinecap="round"/></svg>; }
+function CheckCircleIcon({ size=16, color='#86EFAC' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" fill="none"/><path d="M8 12.5l2.5 2.5 5-5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
+function PhoneIcon({ size=18, color='rgba(42,30,64,.45)' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.47 11.47 0 003.58.57 1 1 0 011 1V21a1 1 0 01-1 1A17 17 0 013 5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.58a1 1 0 01-.25 1.02l-2.2 2.19z" fill={color}/></svg>; }
+function PhoneOffIcon({ size=20, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M10.68 13.31a16 16 0 003.01 3.01l2.18-2.18a1 1 0 011.01-.25c1.12.36 2.33.56 3.57.56a1 1 0 011 1V19a1 1 0 01-1 1C9.61 20 4 14.39 4 7.5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.58a1 1 0 01-.25 1.01L7.68 14.11" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><line x1="23" y1="1" x2="1" y2="23" stroke={color} strokeWidth="2" strokeLinecap="round"/></svg>; }
+function PhoneAnswerIcon({ size=20, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24 11.47 11.47 0 003.58.57 1 1 0 011 1V21a1 1 0 01-1 1A17 17 0 013 5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.58a1 1 0 01-.25 1.02l-2.2 2.19z" fill={color}/></svg>; }
+function MicIcon({ size=18, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="12" rx="3" fill={color}/><path d="M5 10a7 7 0 0014 0M12 19v3M9 22h6" stroke={color} strokeWidth="2" strokeLinecap="round"/></svg>; }
+function BellIcon({ size=18, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>; }
+function ExpandIcon({ size=18, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M8 3H5a2 2 0 00-2 2v3M21 8V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3M16 21h3a2 2 0 002-2v-3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>; }
+function WaveIcon({ size=18, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M2 12h2M6 7c0 0 1-1 2 0s2 5 2 5-1 4-2 5-2-1-2-1M14 8c0 0 1-1 2 0s2 4 2 4-1 3-2 4-2-1-2-1M20 12h2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>; }
+function RebootIcon({ size=18, color='#fff' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 2.64-6.36M3 5v5h5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>; }
+function RestartIcon({ size=14, color='currentColor' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 2.64-6.36M3 5v5h5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>; }
+function BackArrowIcon({ size=24, color='#2A1F3D' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" fill={color}/></svg>; }
+function ChevronRightIcon({ size=16, color='rgba(42,30,64,.3)' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>; }
+function QuestionIcon({ size=16, color='rgba(42,30,64,.4)' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.5" fill="none"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" stroke={color} strokeWidth="1.5" strokeLinecap="round"/></svg>; }
+function SpeakerIcon({ size=22, color='rgba(42,30,64,.55)' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H2v6h4l5 4V5z" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" fill="none"/><path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" stroke={color} strokeWidth="1.8" strokeLinecap="round"/></svg>; }
+function KeypadIcon({ size=22, color='rgba(42,30,64,.55)' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><circle cx="6" cy="6" r="1.5" fill={color}/><circle cx="12" cy="6" r="1.5" fill={color}/><circle cx="18" cy="6" r="1.5" fill={color}/><circle cx="6" cy="12" r="1.5" fill={color}/><circle cx="12" cy="12" r="1.5" fill={color}/><circle cx="18" cy="12" r="1.5" fill={color}/><circle cx="6" cy="18" r="1.5" fill={color}/><circle cx="12" cy="18" r="1.5" fill={color}/><circle cx="18" cy="18" r="1.5" fill={color}/></svg>; }
+function MuteIcon({ size=22, color='rgba(42,30,64,.55)' }) { return <svg width={size} height={size} viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="12" rx="3" stroke={color} strokeWidth="1.8" fill="none"/><path d="M5 10a7 7 0 0014 0M12 19v3M9 22h6" stroke={color} strokeWidth="1.8" strokeLinecap="round"/></svg>; }
+
+// ─── Phone frame ──────────────────────────────────────────────────────────────
+function PhoneStatusBar({ dark=false }) {
+  const c = dark ? '#4A3F5C' : '#2A1F3D';
+  return (
+    <div style={{ height:40, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 16px', background:dark?'#FBF7FE':'transparent', flexShrink:0 }}>
+      <span style={{ fontSize:14, color:c }}>9:30</span>
+      <div style={{ position:'absolute', left:'50%', top:8, transform:'translateX(-50%)', width:24, height:24, borderRadius:100, background:dark?'#E4DCEC':'#2e2e2e' }} />
+      <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+        <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 10L.67 2.67a10.37 10.37 0 0114.66 0L8 10z" fill={c}/></svg>
+        <svg width="20" height="12" viewBox="0 0 20 12"><rect x="0" y="5" width="4" height="7" rx="1" fill={c} opacity="0.3"/><rect x="6" y="3" width="4" height="9" rx="1" fill={c} opacity="0.6"/><rect x="12" y="0" width="4" height="12" rx="1" fill={c}/></svg>
+        <svg width="26" height="12" viewBox="0 0 26 12"><rect x="0" y="1" width="22" height="10" rx="2" stroke={c} strokeWidth="1.5" fill="none"/><rect x="22" y="4" width="2.5" height="4" rx="1" fill={c}/><rect x="1.5" y="2.5" width="16" height="7" rx="1" fill={c}/></svg>
+      </div>
+    </div>
+  );
+}
+function PhoneNavBar({ dark=false }) {
+  return <div style={{ height:24, display:'flex', alignItems:'center', justifyContent:'center', background:dark?'#FBF7FE':'transparent', flexShrink:0 }}><div style={{ width:108, height:4, borderRadius:2, background:dark?'rgba(42,30,64,.3)':'rgba(42,30,64,.35)' }} /></div>;
+}
+const DW = 412, DH = 892;
+function PhoneFrame({ children }) {
+  return (
+    <div style={{ width:DW, height:DH, borderRadius:18, overflow:'hidden', background:'#EDE6F5', border:'8px solid rgba(139,31,88,.18)', boxShadow:'0 30px 80px rgba(139,31,88,.18)', display:'flex', flexDirection:'column' }}>
+      <PhoneStatusBar />
+      <div style={{ flex:1, overflow:'hidden', position:'relative' }}>{children}</div>
+      <PhoneNavBar />
+    </div>
+  );
+}
+function usePhoneScale() {
+  const [s, setS] = React.useState(1);
+  React.useEffect(() => {
+    const up = () => setS(Math.max(.5, Math.min(1.3, (window.innerWidth-48)/DW, (window.innerHeight-180)/DH)));
+    up(); window.addEventListener('resize', up); return () => window.removeEventListener('resize', up);
+  }, []);
+  return s;
+}
+function useIsMobile() {
+  const [m, setM] = React.useState(window.innerWidth <= 600);
+  React.useEffect(() => {
+    const up = () => setM(window.innerWidth <= 600);
+    window.addEventListener('resize', up); return () => window.removeEventListener('resize', up);
+  }, []);
+  return m;
+}
+function ScreenTransition({ k, children }) {
+  const [v, setV] = React.useState(false);
+  React.useEffect(() => { setV(false); const t = setTimeout(() => setV(true), 50); return () => clearTimeout(t); }, [k]);
+  return <div style={{ width:'100%', height:'100%', opacity:v?1:0, transform:v?'translateY(0)':'translateY(14px)', transition:'opacity .32s ease, transform .32s ease' }}>{children}</div>;
+}
+
+// ─── Shared ───────────────────────────────────────────────────────────────────
+function BadgePill({ icon, label }) {
+  return (
+    <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:BERRY, border:'1px solid rgba(42,30,64,.22)', boxShadow:'inset 0 1px 0 rgba(42,30,64,.12)', backdropFilter:'blur(4px)', borderRadius:999, padding:'6px 14px 6px 10px' }}>
+      {icon}
+      <span style={{ color:'#fff', fontSize:11, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', fontFamily:IF }}>{label}</span>
+    </div>
+  );
+}
+function PillBtn({ label, disabled, onClick, height=64 }) {
+  const [p, setP] = React.useState(false);
+  return (
+    <div onMouseDown={() => !disabled && setP(true)} onMouseUp={() => setP(false)} onMouseLeave={() => setP(false)} onClick={() => !disabled && onClick && onClick()}
+      style={{ width:'100%', height, borderRadius:16, background:disabled?'rgba(42,30,64,.08)':BERRY, border:`1px solid ${disabled?'rgba(42,30,64,.1)':'rgba(42,30,64,.22)'}`, boxShadow:disabled?'none':'inset 0 1px 0 rgba(42,30,64,.12),inset 0 -1px 0 rgba(0,0,0,.2)', backdropFilter:'blur(4px)', display:'flex', alignItems:'center', justifyContent:'center', cursor:disabled?'default':'pointer', opacity:p?.65:1, transition:'opacity .1s,background .2s', userSelect:'none' }}>
+      <span style={{ color:disabled?'rgba(42,30,64,.3)':'#fff', fontSize:16, fontWeight:700, fontFamily:IF }}>{label}</span>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screen 1 — Sign up
+// ════════════════════════════════════════════════════════════════════════════
+function GlassCheckbox({ checked, onChange, children }) {
+  return (
+    <div onClick={onChange} style={{ display:'flex', alignItems:'flex-start', gap:12, cursor:'pointer', userSelect:'none' }}>
+      <div style={{ width:26, height:26, borderRadius:8, flexShrink:0, marginTop:1, display:'flex', alignItems:'center', justifyContent:'center', background:checked?BERRY:'rgba(42,30,64,.1)', border:checked?'1.5px solid rgba(42,30,64,.4)':'1.5px solid rgba(42,30,64,.35)', transition:'background .15s', backdropFilter:'blur(4px)' }}>
+        {checked && <svg width={15} height={15} viewBox="0 0 13 13" fill="none"><path d="M2.5 6.5l3 3 5-5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      </div>
+      <div style={{ fontSize:13, lineHeight:1.5, color:'rgba(42,30,64,.75)', fontFamily:IF }}>{children}</div>
+    </div>
+  );
+}
+function SignUpScreen({ onContinue }) {
+  const [phone, setPhone] = React.useState('');
+  const [tos, setTos] = React.useState(false);
+  const [priv, setPriv] = React.useState(false);
+  const [sms, setSms] = React.useState(false);
+  const ok = phone.replace(/\D/g,'').length>=10 && tos && priv && sms;
+  function fmt(e) {
+    const d=e.target.value.replace(/\D/g,'').slice(0,10); let f=d;
+    if(d.length>=7) f=`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+    else if(d.length>=4) f=`(${d.slice(0,3)}) ${d.slice(3)}`;
+    else if(d.length>=1) f=`(${d}`; setPhone(f);
+  }
+  return (
+    <div style={{ width:'100%', height:'100%', background:MIMI_BG, display:'flex', flexDirection:'column', padding:'52px 0 0', overflow:'hidden' }}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', padding:'20px 24px 0', justifyContent:'center' }}>
+        <div style={{ marginBottom:28 }}><BadgePill icon={<svg width={16} height={16} viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="rgba(42,30,64,.85)"/></svg>} label="KISSUX SSOS" /></div>
+        <div style={{ marginBottom:10 }}>{['Stop scams,','stay safe.'].map((l,i) => <div key={i} style={{ display:'block', color:'#2A1F3D', fontSize:52, fontWeight:800, lineHeight:1.06, letterSpacing:'-.03em', fontFamily:IF }}>{l}</div>)}</div>
+        <div style={{ color:'rgba(42,30,64,.72)', fontSize:15, lineHeight:1.5, fontFamily:IF, marginBottom:32 }}>Stay safe with Mimi, your fraud protection companion.</div>
+        <div style={{ fontSize:12, fontWeight:600, letterSpacing:'.08em', textTransform:'uppercase', color:'rgba(42,30,64,.65)', fontFamily:IF, marginBottom:10 }}>Enter your phone number</div>
+        <div style={{ position:'relative', marginBottom:20 }}>
+          <div style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)' }}><PhoneIcon size={17}/></div>
+          <input type="tel" inputMode="numeric" placeholder="(555) 000-0000" value={phone} onChange={fmt}
+            style={{ width:'100%', height:56, borderRadius:14, ...glassInput, paddingLeft:44, paddingRight:16, color:'#2A1F3D', fontSize:16, fontWeight:500, fontFamily:IF, outline:'none', caretColor:'#E05C9A' }}/>
+        </div>
+      </div>
+      <div style={{ padding:'0 20px 28px' }}>
+        <div style={{ height:1, background:'rgba(42,30,64,.08)', marginBottom:20 }}/>
+        <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:24 }}>
+          <GlassCheckbox checked={tos} onChange={() => setTos(t=>!t)}>I agree to the <span style={{ color:'rgba(42,30,64,.8)', textDecoration:'underline' }}>Terms of Service</span></GlassCheckbox>
+          <GlassCheckbox checked={priv} onChange={() => setPriv(p=>!p)}>{"I've read the"} <span style={{ color:'rgba(42,30,64,.8)', textDecoration:'underline' }}>Privacy Policy</span></GlassCheckbox>
+          <GlassCheckbox checked={sms} onChange={() => setSms(s=>!s)}>I consent to Mimi monitoring calls and SMS to detect scams on my behalf</GlassCheckbox>
+        </div>
+        <PillBtn label="Get protected" disabled={!ok} onClick={onContinue}/>
+        <div style={{ textAlign:'center', marginTop:16, fontSize:13, color:'rgba(42,30,64,.65)', fontFamily:IF }}>Already have an account? <span style={{ color:'rgba(42,30,64,.72)', fontWeight:600, cursor:'pointer' }}>Sign in</span></div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screen 2 — Permissions explainer
+// ════════════════════════════════════════════════════════════════════════════
+const PERM_GROUPS = [
+  { label:'Android will ask you', sublabel:'all three required', items:[
+    { Icon:PhoneIcon, iconBg:'rgba(224,92,154,.18)', iconColor:'#E05C9A', name:'Phone access', benefit:"Detect calls the moment they connect — so Mimi is ready before the conversation starts.", denied:"Without this, Mimi can't detect calls at all." },
+    { Icon:MicIcon,   iconBg:'rgba(224,92,154,.18)', iconColor:'#E05C9A', name:'Microphone',   benefit:"Transcribe and analyse the call in real time — this is how Mimi spots the scam script.", denied:"Without this, no transcription and no fraud detection." },
+    { Icon:BellIcon,  iconBg:'rgba(224,92,154,.18)', iconColor:'#E05C9A', name:'Notifications', benefit:"Send a fraud alert instantly — even when you're not looking at the screen.", denied:"Without this, Mimi can't alert you at all." },
+  ]},
+  { label:'One setting to turn on', sublabel:'recommended', items:[
+    { Icon:ExpandIcon, iconBg:'rgba(245,158,11,.15)', iconColor:'#F59E0B', name:'Full-screen alerts', benefit:"Override your screen mid-call so the warning is impossible to miss — even with the phone locked.", denied:"Without this, Mimi falls back to a standard notification — still there, just easier to miss." },
+  ]},
+  { label:'Granted automatically', sublabel:'no dialogs — just so you know', items:[
+    { Icon:WaveIcon,   iconBg:'rgba(42,30,64,.07)', iconColor:'rgba(42,30,64,.45)', name:'Run during calls', benefit:"Stay active in the background the entire time you're on the phone.", denied:null },
+    { Icon:RebootIcon, iconBg:'rgba(42,30,64,.07)', iconColor:'rgba(42,30,64,.45)', name:'Start on reboot', benefit:"Resume protecting you automatically after every phone restart — no need to reopen the app.", denied:null },
+  ]},
+];
+function PermissionRow({ item, isLast }) {
+  return (
+    <div>
+      <div style={{ display:'flex', alignItems:'flex-start', gap:13, padding:'14px 0' }}>
+        <div style={{ width:36, height:36, borderRadius:10, background:item.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
+          <item.Icon size={17} color={item.iconColor}/>
+        </div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontSize:14, fontWeight:600, color:'#2A1F3D', fontFamily:IF, marginBottom:3, lineHeight:1.3 }}>{item.name}</div>
+          <div style={{ fontSize:12, color:'rgba(42,30,64,.58)', lineHeight:1.5, fontFamily:IF }}>{item.benefit}</div>
+          {item.denied && <div style={{ fontSize:11, marginTop:5, lineHeight:1.4, fontFamily:IF, fontWeight:500, color:item.iconColor==='#F59E0B'?'rgba(245,158,11,.7)':'rgba(255,120,130,.7)' }}>{item.denied}</div>}
+        </div>
+      </div>
+      {!isLast && <div style={{ height:1, background:'rgba(42,30,64,.07)', marginLeft:49 }}/>}
+    </div>
+  );
+}
+function PermissionsScreen({ onContinue }) {
+  return (
+    <div style={{ width:'100%', height:'100%', background:MIMI_BG, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div style={{ padding:'28px 24px 0', flexShrink:0 }}>
+        <div style={{ marginBottom:14 }}><BadgePill icon={<ShieldIcon size={14}/>} label="PERMISSIONS"/></div>
+        <div style={{ marginBottom:6, color:'#2A1F3D', fontSize:27, fontWeight:800, lineHeight:1.15, letterSpacing:'-.025em', fontFamily:IF }}>{"Here's what Mimi needs to protect you — and why."}</div>
+        <div style={{ color:'rgba(42,30,64,.5)', fontSize:13, lineHeight:1.5, fontFamily:IF, marginBottom:18 }}>{"Before we ask, here's exactly what each permission does and what breaks without it."}</div>
+      </div>
+      <div style={{ flex:1, overflowY:'auto', padding:'0 20px', scrollbarWidth:'none' }}>
+        {PERM_GROUPS.map((g,gi) => (
+          <div key={gi} style={{ marginBottom:14 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:7 }}>
+              <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', textTransform:'uppercase', color:'rgba(42,30,64,.38)', fontFamily:IF }}>{g.label}</span>
+              <span style={{ fontSize:10, color:'rgba(42,30,64,.22)', fontFamily:IF }}>{'— '}{g.sublabel}</span>
+            </div>
+            <div style={{ ...glassCard, padding:'0 14px' }}>
+              {g.items.map((item,ii) => <PermissionRow key={ii} item={item} isLast={ii===g.items.length-1}/>)}
+            </div>
+          </div>
+        ))}
+        <div style={{ height:8 }}/>
+      </div>
+      <div style={{ padding:'0 20px 28px', flexShrink:0 }}>
+        <div style={{ height:1, background:'rgba(42,30,64,.08)', marginBottom:16 }}/>
+        <PillBtn label="Grant permissions" onClick={onContinue}/>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screens 3–5 — Android permission dialogs
+// ════════════════════════════════════════════════════════════════════════════
+function AndroidDialog({ question, onAllow }) {
+  const [v, setV] = React.useState(false);
+  const [p, setP] = React.useState(null);
+  React.useEffect(() => { const t=setTimeout(()=>setV(true),80); return ()=>clearTimeout(t); }, []);
+  return (
+    <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+      <div style={{ background:'#FFFFFF', borderRadius:'28px 28px 0 0', padding:'0 20px 40px', boxShadow:'0 -8px 40px rgba(139,31,88,.18)', transform:v?'translateY(0)':'translateY(100%)', transition:'transform .38s cubic-bezier(.33,1,.68,1)' }}>
+        <div style={{ display:'flex', justifyContent:'center', padding:'12px 0 22px' }}><div style={{ width:32, height:4, borderRadius:2, background:'rgba(42,30,64,.18)' }}/></div>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8, marginBottom:22 }}>
+          <div style={{ width:56, height:56, borderRadius:16, background:'rgba(139,31,88,.12)', border:'1px solid rgba(139,31,88,.2)', display:'flex', alignItems:'center', justifyContent:'center' }}><ShieldIcon size={28} color={BERRY}/></div>
+          <span style={{ fontSize:12, color:'rgba(42,30,64,.5)', fontFamily:IF, fontWeight:500 }}>Mimi</span>
+        </div>
+        <div style={{ fontSize:20, fontWeight:700, color:'#2A1F3D', textAlign:'center', lineHeight:1.35, marginBottom:28, fontFamily:IF }}>{question}</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          <div onMouseDown={()=>setP('a')} onMouseUp={()=>setP(null)} onMouseLeave={()=>setP(null)} onClick={onAllow}
+            style={{ height:56, borderRadius:16, background:'#E9DDFF', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', userSelect:'none', opacity:p==='a'?.7:1, transition:'opacity .1s' }}>
+            <span style={{ color:'#381E72', fontSize:16, fontWeight:700, fontFamily:IF }}>Allow</span>
+          </div>
+          <div onMouseDown={()=>setP('d')} onMouseUp={()=>setP(null)} onMouseLeave={()=>setP(null)}
+            style={{ height:56, borderRadius:16, background:'rgba(42,30,64,.06)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', userSelect:'none', opacity:p==='d'?.5:1, transition:'opacity .1s' }}>
+            <span style={{ color:'rgba(42,30,64,.6)', fontSize:16, fontWeight:500, fontFamily:IF }}>{"Don't allow"}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+function AndroidPermissionScreen({ question, onAllow }) {
+  return (
+    <div style={{ width:'100%', height:'100%', position:'relative', overflow:'hidden' }}>
+      <div style={{ position:'absolute', inset:0, background:MIMI_BG }}/>
+      <div style={{ position:'absolute', inset:0, background:'rgba(58,33,84,.22)' }}/>
+      <AndroidDialog question={question} onAllow={onAllow}/>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screen 6 — Bridging
+// ════════════════════════════════════════════════════════════════════════════
+function BridgingScreen({ onContinue }) {
+  return (
+    <div style={{ width:'100%', height:'100%', background:MIMI_BG, display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 24px' }}>
+        <div style={{ marginBottom:18 }}><BadgePill icon={<ExpandIcon size={14}/>} label="ALMOST THERE"/></div>
+        <div style={{ color:'#2A1F3D', fontSize:38, fontWeight:800, lineHeight:1.1, letterSpacing:'-.025em', fontFamily:IF, marginBottom:16 }}>One more step for full-screen alerts.</div>
+        <div style={{ color:'rgba(42,30,64,.58)', fontSize:15, lineHeight:1.6, fontFamily:IF, marginBottom:28 }}>{"Android requires you to enable full-screen notifications in Settings. We'll take you there now."}</div>
+        <div style={{ ...glassCard, padding:'16px' }}>
+          <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+            <div style={{ width:36, height:36, borderRadius:10, background:'rgba(245,158,11,.15)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}><ExpandIcon size={17} color="#F59E0B"/></div>
+            <div>
+              <div style={{ fontSize:14, fontWeight:600, color:'#2A1F3D', fontFamily:IF, marginBottom:3 }}>Full-screen alerts</div>
+              <div style={{ fontSize:12, color:'rgba(42,30,64,.55)', lineHeight:1.5, fontFamily:IF }}>{"Breaks through mid-call so warnings are impossible to miss — even with the screen locked."}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ padding:'0 20px 28px', flexShrink:0 }}>
+        <div style={{ height:1, background:'rgba(42,30,64,.08)', marginBottom:16 }}/>
+        <PillBtn label="Open Settings" onClick={onContinue}/>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screen 7 — Android Settings
+// ════════════════════════════════════════════════════════════════════════════
+function AndroidToggle({ checked }) {
+  return <div style={{ width:52, height:32, borderRadius:16, background:checked?'#538D4E':'rgba(42,30,64,.22)', position:'relative', transition:'background .25s', flexShrink:0 }}><div style={{ width:24, height:24, borderRadius:12, background:'#fff', position:'absolute', top:4, left:checked?24:4, transition:'left .25s', boxShadow:'0 1px 4px rgba(0,0,0,.4)' }}/></div>;
+}
+function AndroidSettingsScreen({ onToggle }) {
+  const [enabled, setEnabled] = React.useState(false);
+  function handle() { if(enabled) return; setEnabled(true); setTimeout(onToggle,750); }
+  return (
+    <div style={{ width:'100%', height:'100%', background:'#FFFFFF', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+      <div style={{ height:64, display:'flex', alignItems:'center', padding:'0 4px', flexShrink:0 }}>
+        <div style={{ width:56, height:56, display:'flex', alignItems:'center', justifyContent:'center' }}><BackArrowIcon size={24}/></div>
+        <span style={{ fontSize:22, color:'#2A1F3D', fontWeight:400, fontFamily:IF }}>Mimi</span>
+      </div>
+      <div style={{ flex:1, overflowY:'auto' }}>
+        {[['Show notifications',true],['Fraud alerts',true],['Call monitoring',true]].map(([lbl,on],i) => (
+          <React.Fragment key={i}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 24px', minHeight:56 }}>
+              <span style={{ fontSize:16, color:'#2A1F3D', fontFamily:IF }}>{lbl}</span><AndroidToggle checked={on}/>
+            </div>
+            <div style={{ height:1, background:'rgba(42,30,64,.08)', marginLeft:24 }}/>
+          </React.Fragment>
+        ))}
+        <div style={{ padding:'20px 24px 8px', fontSize:13, color:BERRY, fontWeight:600, letterSpacing:'.04em', fontFamily:IF }}>Special app access</div>
+        <div onClick={handle} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'16px 24px', cursor:'pointer', background:enabled?'rgba(22,163,74,.08)':'rgba(139,31,88,.05)', transition:'background .3s' }}>
+          <div style={{ flex:1, marginRight:16 }}>
+            <div style={{ fontSize:16, color:'#2A1F3D', fontFamily:IF }}>Full-screen notifications</div>
+            <div style={{ fontSize:13, color:'#6B6178', marginTop:4, lineHeight:1.4, fontFamily:IF }}>{"Shows over other apps and the lock screen"}</div>
+            {!enabled && <div style={{ marginTop:8, display:'inline-flex', alignItems:'center', gap:4, background:'rgba(245,158,11,.14)', border:'1px solid rgba(245,158,11,.3)', borderRadius:6, padding:'4px 8px' }}><span style={{ fontSize:11, color:'#B45309', fontWeight:700, letterSpacing:'.06em', textTransform:'uppercase', fontFamily:IF }}>Tap to enable</span></div>}
+            {enabled && <div style={{ marginTop:6, display:'inline-flex', alignItems:'center', gap:5 }}><CheckCircleIcon size={13} color="#16A34A"/><span style={{ fontSize:12, color:'#16A34A', fontWeight:500, fontFamily:IF }}>Enabled</span></div>}
+          </div>
+          <div style={{ marginTop:2 }}><AndroidToggle checked={enabled}/></div>
+        </div>
+        <div style={{ height:1, background:'rgba(42,30,64,.08)' }}/>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screen 8 — Ready
+// ════════════════════════════════════════════════════════════════════════════
+function ReadyScreen({ onContinue }) {
+  const [v, setV] = React.useState(false);
+  React.useEffect(() => { const t=setTimeout(()=>setV(true),100); return ()=>clearTimeout(t); }, []);
+  return (
+    <div style={{ width:'100%', height:'100%', background:SAFE_BG, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'0 32px', overflow:'hidden' }}>
+      <div style={{ width:100, height:100, borderRadius:28, background:'rgba(22,163,74,.12)', border:'2px solid rgba(22,163,74,.25)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:36, opacity:v?1:0, transform:v?'scale(1)':'scale(.4)', transition:'all .55s cubic-bezier(.34,1.56,.64,1)' }}><CheckCircleIcon size={52} color="#16A34A"/></div>
+      <div style={{ opacity:v?1:0, transform:v?'translateY(0)':'translateY(20px)', transition:'all .4s ease .18s', textAlign:'center', marginBottom:48, width:'100%' }}>
+        <div style={{ fontSize:52, fontWeight:800, color:'#2A1F3D', letterSpacing:'-.03em', lineHeight:1.06, marginBottom:12, fontFamily:IF }}>Mimi is ready.</div>
+        <div style={{ fontSize:16, color:'rgba(42,30,64,.58)', lineHeight:1.55, fontFamily:IF }}>{"You're protected on every call from now on."}</div>
+      </div>
+      <div style={{ width:'100%', opacity:v?1:0, transform:v?'translateY(0)':'translateY(20px)', transition:'all .4s ease .3s' }}>
+        <PillBtn label="Go to home screen" onClick={onContinue}/>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screen 9 — Home screen (with incoming call notification)
+// ════════════════════════════════════════════════════════════════════════════
+
+const CALLS = [
+  { name:'Mom',        number:null,            time:'2 min ago',           duration:'4:22',  status:'clean',   isContact:true  },
+  { name:null,         number:'(623) 547-8821', time:'47 min ago',          duration:'0:38',  status:'flagged', isContact:false },
+  { name:'Work',       number:null,            time:'1 hr ago',             duration:'12:05', status:'clean',   isContact:true  },
+  { name:'Sarah',      number:null,            time:'Yesterday, 4:15 PM',   duration:'8:47',  status:'clean',   isContact:true  },
+  { name:null,         number:'(888) 203-4412', time:'Yesterday, 11:32 AM',  duration:'2:14', status:'scanned', isContact:false },
+  { name:'Dr. Chen',   number:null,            time:'Tue, 2:00 PM',         duration:'3:51',  status:'clean',   isContact:true  },
+];
+const CALL_STATUS = {
+  clean:   { dot:'#16A34A',            bg:'rgba(22,163,74,.1)',   label:'Clean'   },
+  scanned: { dot:'rgba(42,30,64,.35)', bg:'rgba(42,30,64,.06)',   label:'Scanned' },
+  flagged: { dot:'#B45309',            bg:'rgba(245,158,11,.14)', label:'Flagged' },
+};
+
+function CallRow({ call, onTap }) {
+  const [p, setP] = React.useState(false);
+  const st = CALL_STATUS[call.status];
+  const isFlagged = call.status === 'flagged';
+  const label = call.name || call.number;
+  return (
+    <div onMouseDown={() => setP(true)} onMouseUp={() => setP(false)} onMouseLeave={() => setP(false)} onClick={onTap}
+      style={{ display:'flex', alignItems:'center', gap:13, padding:'12px 0', borderBottom:'1px solid rgba(42,30,64,.055)', cursor:isFlagged?'pointer':'default', opacity:p&&isFlagged?.7:1, transition:'opacity .1s' }}>
+      <div style={{ width:44, height:44, borderRadius:22, background:call.isContact?'rgba(139,31,88,.28)':'rgba(42,30,64,.07)', border:`1px solid ${call.isContact?'rgba(42,30,64,.12)':'rgba(42,30,64,.08)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+        {call.isContact ? <span style={{ fontSize:17, fontWeight:700, color:'rgba(42,30,64,.85)', fontFamily:IF }}>{label[0]}</span> : <PhoneIcon size={18} color="rgba(42,30,64,.35)"/>}
+      </div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:15, fontWeight:600, color:'#2A1F3D', fontFamily:IF, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', marginBottom:3 }}>{label}</div>
+        <div style={{ fontSize:12, color:'rgba(42,30,64,.38)', fontFamily:IF }}>{call.time} &middot; {call.duration}</div>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:6, background:st.bg, borderRadius:999, padding:'5px 10px', flexShrink:0 }}>
+        <div style={{ width:6, height:6, borderRadius:3, background:st.dot }}/>
+        <span style={{ fontSize:12, fontWeight:600, color:st.dot, fontFamily:IF }}>{st.label}</span>
+      </div>
+      {isFlagged && <ChevronRightIcon size={16} color="rgba(245,158,11,.5)"/>}
+    </div>
+  );
+}
+
+function ProtectionOrb() {
+  return (
+    <div style={{ position:'relative', width:180, height:180, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+      <div style={{ position:'absolute', width:176, height:176, borderRadius:'50%', border:'1px solid rgba(22,163,74,.16)', animation:'orb-pulse2 4s ease-in-out infinite' }}/>
+      <div style={{ position:'absolute', width:140, height:140, borderRadius:'50%', border:'1.5px solid rgba(22,163,74,.25)', animation:'orb-pulse 3.5s ease-in-out infinite .5s' }}/>
+      <div style={{ width:104, height:104, borderRadius:'50%', background:'radial-gradient(circle at 35% 35%,rgba(22,163,74,.16) 0%,rgba(22,163,74,.06) 60%,transparent 100%)', border:'1.5px solid rgba(22,163,74,.35)', boxShadow:'0 0 32px rgba(22,163,74,.14)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ animation:'shield-breathe 4s ease-in-out infinite' }}><ShieldIcon size={46} color="#16A34A"/></div>
+      </div>
+    </div>
+  );
+}
+
+function IncomingCallNotif({ visible, onAnswer, onDecline }) {
+  const [answerPressed, setAP] = React.useState(false);
+  const [declinePressed, setDP] = React.useState(false);
+  return (
+    <div style={{ position:'absolute', top:0, left:0, right:0, zIndex:30, padding:'8px 12px 0', pointerEvents:visible?'auto':'none', animation:visible?'notif-drop .42s cubic-bezier(.34,1.2,.64,1) forwards':undefined, transform:visible?undefined:'translateY(-120%)' }}>
+      <div style={{ background:'#FFFFFF', borderRadius:18, padding:'12px 14px 14px', boxShadow:'0 12px 40px rgba(139,31,88,.22), 0 2px 8px rgba(139,31,88,.1)', border:'1px solid rgba(139,31,88,.1)' }}>
+
+        {/* App identity row */}
+        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:10 }}>
+          <div style={{ width:18, height:18, borderRadius:5, background:'rgba(139,31,88,.7)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <ShieldIcon size={11} color="#fff"/>
+          </div>
+          <span style={{ fontSize:12, color:'rgba(42,30,64,.45)', fontFamily:IF, fontWeight:500, letterSpacing:'.01em' }}>Incoming call</span>
+        </div>
+
+        {/* Caller row + actions */}
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          {/* Avatar */}
+          <div style={{ width:46, height:46, borderRadius:23, background:'rgba(42,30,64,.09)', border:'1px solid rgba(42,30,64,.12)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+            <PhoneIcon size={20} color="rgba(42,30,64,.5)"/>
+          </div>
+          {/* Caller info */}
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontSize:17, fontWeight:700, color:'#2A1F3D', fontFamily:IF, lineHeight:1.2 }}>(623) 547-8821</div>
+            <div style={{ fontSize:12, color:'rgba(42,30,64,.42)', fontFamily:IF, marginTop:2 }}>Unknown caller</div>
+          </div>
+          {/* Action buttons */}
+          <div style={{ display:'flex', gap:10, flexShrink:0 }}>
+            {/* Decline */}
+            <div onMouseDown={() => setDP(true)} onMouseUp={() => setDP(false)} onMouseLeave={() => setDP(false)} onClick={onDecline}
+              style={{ width:46, height:46, borderRadius:23, background:'#C0392B', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', userSelect:'none', opacity:declinePressed?.7:1, transition:'opacity .1s', boxShadow:'0 3px 12px rgba(192,57,43,.4)' }}>
+              <PhoneOffIcon size={19} color="#fff"/>
+            </div>
+            {/* Answer */}
+            <div onMouseDown={() => setAP(true)} onMouseUp={() => setAP(false)} onMouseLeave={() => setAP(false)} onClick={onAnswer}
+              style={{ width:46, height:46, borderRadius:23, background:'#16A34A', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', userSelect:'none', opacity:answerPressed?.7:1, transition:'opacity .1s', animation:'answer-ring 1.6s ease-in-out infinite', boxShadow:'0 3px 12px rgba(22,163,74,.45)' }}>
+              <PhoneAnswerIcon size={19} color="#fff"/>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function HomeScreen({ onAnswer, onHowItWorks }) {
+  const [vis, setVis] = React.useState(false);
+  const [notif, setNotif] = React.useState(false);
+
+  React.useEffect(() => {
+    const vt = setTimeout(() => setVis(true), 80);
+    const nt = setTimeout(() => setNotif(true), 1800);
+    return () => { clearTimeout(vt); clearTimeout(nt); };
+  }, []);
+
+  function handleDecline() { setNotif(false); }
+
+  return (
+    <div style={{ width:'100%', height:'100%', background:SAFE_BG, display:'flex', flexDirection:'column', overflow:'hidden', position:'relative' }}>
+
+      {/* ── Incoming call notification overlay ── */}
+      <IncomingCallNotif visible={notif} onAnswer={onAnswer} onDecline={handleDecline}/>
+
+      {/* ── Status hero ── */}
+      <div style={{ padding:'24px 24px 20px', display:'flex', flexDirection:'column', alignItems:'center', flexShrink:0, opacity:vis?1:0, transform:vis?'translateY(0)':'translateY(16px)', transition:'all .45s ease' }}>
+        <ProtectionOrb/>
+        <div style={{ textAlign:'center', marginTop:20 }}>
+          <div style={{ fontSize:26, fontWeight:800, color:'#2A1F3D', letterSpacing:'-.02em', fontFamily:IF, lineHeight:1.15 }}>Mimi is protecting you.</div>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:7, marginTop:8 }}>
+            <div style={{ width:7, height:7, borderRadius:'50%', background:'#16A34A', boxShadow:'0 0 6px rgba(22,163,74,.6)' }}/>
+            <span style={{ fontSize:13, color:'rgba(42,30,64,.55)', fontFamily:IF }}>Active since today, 9:30 AM</span>
+          </div>
+          <div style={{ fontSize:12, color:'rgba(42,30,64,.28)', fontFamily:IF, marginTop:6 }}>247 calls scanned &nbsp;&middot;&nbsp; 3 threats stopped</div>
+        </div>
+      </div>
+
+      <div style={{ height:1, background:'rgba(42,30,64,.07)', margin:'0 20px', flexShrink:0 }}/>
+
+      {/* ── Call history ── */}
+      <div style={{ flex:1, overflowY:'auto', padding:'0 20px', opacity:vis?1:0, transition:'opacity .45s ease .15s' }}>
+        <div style={{ fontSize:11, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:'rgba(42,30,64,.32)', padding:'14px 0 8px', fontFamily:IF }}>Recent calls</div>
+        {CALLS.map((call,i) => <CallRow key={i} call={call} onTap={call.status==='flagged'?onAnswer:undefined}/>)}
+        <div style={{ height:16 }}/>
+      </div>
+
+      {/* ── Secondary action ── */}
+      <div style={{ padding:'0 20px 28px', flexShrink:0 }}>
+        <div style={{ height:1, background:'rgba(42,30,64,.07)', marginBottom:16 }}/>
+        <div onClick={onHowItWorks} style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:8, cursor:'pointer', userSelect:'none' }}>
+          <QuestionIcon size={16}/>
+          <span style={{ fontSize:14, color:'rgba(42,30,64,.4)', fontFamily:IF, fontWeight:500 }}>How does Mimi work?</span>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Screen 10 — Android in-call UI → Mimi alert takeover
+// ════════════════════════════════════════════════════════════════════════════
+
+function CallControlBtn({ icon, label }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+      <div style={{ width:60, height:60, borderRadius:30, background:'rgba(255,255,255,.09)', border:'1px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center' }}>{icon}</div>
+      <span style={{ fontSize:11, color:'rgba(255,255,255,.4)', fontFamily:IF, fontWeight:500 }}>{label}</span>
+    </div>
+  );
+}
+
+// AlertScreen state machine (embedded inside call screen)
+const ALERT_STATES = {
+  alert:    { id:'alert',    bg:MIMI_BG,                                                              badge:{label:'SCAM DETECTED',bg:BERRY,    iconType:'warning'}, titleLines:["This caller","is not","the IRS."], body:"The caller is posing as the IRS and is trying to steal your money. It's ok to just hang up.", primary:{label:'I ended the call',         bg:BERRY,    color:'#fff',height:64}, secondary:{label:'Keep listening',        color:'#2A1F3D',height:56} },
+  escalated:{ id:'escalated',bg:'linear-gradient(175deg, #FFF6F6 0%, #FDE4E4 45%, #FBD2D2 100%)',     badge:{label:'HIGH RISK',    bg:'#B91C1C', iconType:'warning'}, titleLines:["Please end","this call","now."],      body:"They are asking for money or your bank details. Do not give any information.",  primary:{label:'End this call',            bg:'#DC2626', color:'#fff',height:72}, secondary:null },
+  resolved: { id:'resolved', bg:SAFE_BG,                                                              badge:{label:"YOU'RE SAFE",  bg:'#16A34A', iconType:'check'},   titleLines:["Good call,","you stayed","safe."],    body:"We've logged this number. Did you share any personal information?",             primary:{label:'I shared some information', bg:'#16A34A', color:'#fff',height:64}, secondary:{label:"All good — dismiss",    color:'#2A1F3D',height:56} },
+};
+
+function MimiAlert({ onEnd, initialKey, onKeepListening }) {
+  const [key, setKey] = React.useState(initialKey || 'alert');
+  const s = ALERT_STATES[key];
+  function onPrimary() { key==='resolved' ? onEnd() : setKey('resolved'); }
+  function onSecondary() {
+    if (key==='alert') { if (onKeepListening) onKeepListening(); }
+    else onEnd();
+  }
+  return (
+    <div style={{ width:'100%', height:'100%', background:s.bg, display:'flex', flexDirection:'column', padding:'36px 0 0', overflow:'hidden', transition:'background .4s ease' }}>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', padding:'0 24px', justifyContent:'center' }}>
+        <div style={{ marginBottom:32, display:'flex', justifyContent:'center' }}>
+          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:s.badge.bg, borderRadius:999, padding:'8px 18px 8px 12px', border:'1px solid rgba(42,30,64,.22)', boxShadow:'inset 0 1px 0 rgba(42,30,64,.12)', backdropFilter:'blur(4px)' }}>
+            {s.badge.iconType==='check' ? <CheckCircleIcon size={18} color="#fff"/> : <WarningCircleIcon size={18} color="#fff"/>}
+            <span style={{ color:'#fff', fontSize:12, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', fontFamily:IF }}>{s.badge.label}</span>
+          </div>
+        </div>
+        <div style={{ marginBottom:28, textAlign:'center' }}>
+          {s.titleLines.map((l,i) => <div key={i} style={{ display:'block', color:'#2A1F3D', fontSize:66, fontWeight:800, lineHeight:1.04, letterSpacing:'-.035em', fontFamily:IF }}>{l}</div>)}
+        </div>
+        <div style={{ color:'rgba(42,30,64,.58)', fontSize:18, lineHeight:1.5, fontFamily:IF, textAlign:'center' }}>{s.body}</div>
+      </div>
+      <div style={{ padding:'0 20px 28px', display:'flex', flexDirection:'column', gap:4 }}>
+        <div style={{ height:1, background:'rgba(42,30,64,.1)', marginBottom:20 }}/>
+        {/* Primary */}
+        {React.createElement(() => {
+          const [p, setP] = React.useState(false);
+          return <div onMouseDown={()=>setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)} onClick={onPrimary} style={{ width:'100%', height:s.primary.height, borderRadius:16, background:s.primary.bg, border:'1px solid rgba(42,30,64,.22)', boxShadow:'inset 0 1px 0 rgba(42,30,64,.12),inset 0 -1px 0 rgba(0,0,0,.2)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', opacity:p?.7:1, transition:'opacity .1s', userSelect:'none', backdropFilter:'blur(4px)' }}><span style={{ color:'#fff', fontSize:16, fontWeight:700, fontFamily:IF, padding:'0 12px', textAlign:'center' }}>{s.primary.label}</span></div>;
+        })}
+        {/* Secondary */}
+        {s.secondary && React.createElement(() => {
+          const [p, setP] = React.useState(false);
+          return <div onMouseDown={()=>setP(true)} onMouseUp={()=>setP(false)} onMouseLeave={()=>setP(false)} onClick={onSecondary} style={{ width:'100%', height:s.secondary.height, display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', opacity:p?.5:1, transition:'opacity .1s', userSelect:'none' }}><span style={{ color:s.secondary.color, fontSize:15, fontWeight:600, fontFamily:IF }}>{s.secondary.label}</span></div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AndroidCallScreen({ onEnd }) {
+  const [secs, setSecs] = React.useState(0);
+  const [connected, setConnected] = React.useState(false);
+  const [showAlert, setShowAlert] = React.useState(false);
+  const [alertKey, setAlertKey] = React.useState('alert');
+
+  React.useEffect(() => {
+    const c = setTimeout(() => setConnected(true), 900);
+    const a = setTimeout(() => setShowAlert(true), 5500);
+    const iv = setInterval(() => setSecs(s => s+1), 1000);
+    return () => { clearTimeout(c); clearTimeout(a); clearInterval(iv); };
+  }, []);
+
+  function handleKeepListening() {
+    setShowAlert(false);
+    setAlertKey('escalated');
+    setTimeout(() => setShowAlert(true), 5000);
+  }
+
+  const mins = Math.floor(secs/60);
+  const ss = String(secs%60).padStart(2,'0');
+  const timeStr = `${mins}:${ss}`;
+
+  return (
+    <div style={{ position:'relative', width:'100%', height:'100%', overflow:'hidden' }}>
+
+      {/* ── Android in-call UI ── */}
+      <div style={{ width:'100%', height:'100%', background:'#0C0E18', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+
+        {/* Caller info — centered in upper half */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'0 32px' }}>
+          {/* Avatar */}
+          <div style={{ width:88, height:88, borderRadius:44, background:'rgba(255,255,255,.08)', border:'2px solid rgba(255,255,255,.1)', display:'flex', alignItems:'center', justifyContent:'center', marginBottom:22 }}>
+            <PhoneIcon size={36} color="rgba(255,255,255,.3)"/>
+          </div>
+          <div style={{ fontSize:28, fontWeight:700, color:'#fff', fontFamily:IF, letterSpacing:'-.01em', marginBottom:6 }}>(623) 547-8821</div>
+          <div style={{ fontSize:15, color:'rgba(255,255,255,.45)', fontFamily:IF, marginBottom:14 }}>Unknown caller</div>
+          {/* Status / timer */}
+          <div style={{ fontSize:16, color:connected?'#4ADE80':'rgba(255,255,255,.35)', fontFamily:IF, fontWeight:500, transition:'color .4s' }}>
+            {connected ? timeStr : 'Connecting...'}
+          </div>
+        </div>
+
+        {/* Call controls */}
+        <div style={{ padding:'0 32px 20px', display:'flex', flexDirection:'column', gap:20 }}>
+          <div style={{ display:'flex', justifyContent:'space-around' }}>
+            <CallControlBtn icon={<MuteIcon size={22}/>} label="Mute"/>
+            <CallControlBtn icon={<KeypadIcon size={22}/>} label="Keypad"/>
+            <CallControlBtn icon={<SpeakerIcon size={22}/>} label="Speaker"/>
+          </div>
+          {/* End call button */}
+          <div style={{ display:'flex', justifyContent:'center' }}>
+            <div style={{ width:72, height:72, borderRadius:36, background:'#C0392B', display:'flex', alignItems:'center', justifyContent:'center', boxShadow:'0 4px 20px rgba(192,57,43,.5)', cursor:'pointer' }}>
+              <PhoneOffIcon size={28} color="#fff"/>
+            </div>
+          </div>
+          <div style={{ height:8 }}/>
+        </div>
+      </div>
+
+      {/* ── Mimi alert full-screen takeover ── */}
+      {showAlert && (
+        <div key={alertKey} style={{ position:'absolute', inset:0, animation:'mimi-takeover .38s cubic-bezier(.33,1,.68,1) forwards', willChange:'transform' }}>
+          <MimiAlert initialKey={alertKey} onEnd={onEnd} onKeepListening={handleKeepListening}/>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// App shell
+// ════════════════════════════════════════════════════════════════════════════
+
+const STEPS = ['signup','permissions','phone-dialog','mic-dialog','notif-dialog','bridge','settings','ready','home','call'];
+
+function StepDots({ step }) {
+  return (
+    <div style={{ display:'flex', gap:4 }}>
+      {STEPS.map((s,i) => <div key={s} style={{ width:i===step?18:5, height:5, borderRadius:3, background:i===step?'rgba(42,30,64,.85)':'rgba(42,30,64,.22)', transition:'width .25s ease,background .25s ease' }}/>)}
+    </div>
+  );
+}
+
+function App() {
+  const [step, setStep] = React.useState(0);
+  const scale = usePhoneScale();
+  const isMobile = useIsMobile();
+  const go = n => () => setStep(n);
+  const s = STEPS[step];
+
+  let screen;
+  if (s==='signup')       screen = <SignUpScreen onContinue={go(1)}/>;
+  if (s==='permissions')  screen = <PermissionsScreen onContinue={go(2)}/>;
+  if (s==='phone-dialog') screen = <AndroidPermissionScreen question="Allow Mimi to make and manage phone calls?" onAllow={go(3)}/>;
+  if (s==='mic-dialog')   screen = <AndroidPermissionScreen question="Allow Mimi to record audio?" onAllow={go(4)}/>;
+  if (s==='notif-dialog') screen = <AndroidPermissionScreen question="Allow Mimi to send you notifications?" onAllow={go(5)}/>;
+  if (s==='bridge')       screen = <BridgingScreen onContinue={go(6)}/>;
+  if (s==='settings')     screen = <AndroidSettingsScreen onToggle={go(7)}/>;
+  if (s==='ready')        screen = <ReadyScreen onContinue={go(8)}/>;
+  if (s==='home')         screen = <HomeScreen onAnswer={go(9)} onHowItWorks={go(1)}/>;
+  if (s==='call')         screen = <AndroidCallScreen onEnd={go(8)}/>;
+
+  if (isMobile) {
+    return (
+      <div style={{ position:'fixed', inset:0, overflow:'hidden', background:'#FBF6FE', display:'flex', flexDirection:'column' }}>
+        <PhoneStatusBar />
+        <div style={{ flex:1, minHeight:0, position:'relative' }}>
+          <ScreenTransition k={step}>{screen}</ScreenTransition>
+        </div>
+        <PhoneNavBar />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ width:'100%', display:'flex', flexDirection:'column', alignItems:'center' }}>
+      <div className="ph">
+        <div className="ey">Mimi &middot; KissUX SSOS</div>
+        <h1>Click-through demo</h1>
+        <p>Sign up, grant permissions, and then watch Mimi step in the moment a scam call comes through.</p>
+      </div>
+      <div style={{ transform:`scale(${scale})`, transformOrigin:'top center', marginBottom:-(DH*(1-scale)) }}>
+        <PhoneFrame>
+          <ScreenTransition k={step}>{screen}</ScreenTransition>
+        </PhoneFrame>
+      </div>
+      <div className="fr">
+        <StepDots step={step}/>
+        <div className="rl" onClick={() => setStep(0)}><RestartIcon/> Restart demo</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
