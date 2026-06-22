@@ -215,9 +215,9 @@ function PermissionRow({ item, isLast }) {
           <item.Icon size={17} color={item.iconColor}/>
         </div>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontSize:14, fontWeight:600, color:'#2A1F3D', fontFamily:IF, marginBottom:3, lineHeight:1.3 }}>{item.name}</div>
-          <div style={{ fontSize:12, color:'rgba(42,30,64,.58)', lineHeight:1.5, fontFamily:IF }}>{item.benefit}</div>
-          {item.denied && <div style={{ fontSize:11, marginTop:5, lineHeight:1.4, fontFamily:IF, fontWeight:500, color:item.iconColor==='#F59E0B'?'rgba(245,158,11,.7)':'rgba(255,120,130,.7)' }}>{item.denied}</div>}
+          <div style={{ fontSize:16, fontWeight:600, color:'#2A1F3D', fontFamily:IF, marginBottom:4, lineHeight:1.3 }}>{item.name}</div>
+          <div style={{ fontSize:14, color:'rgba(42,30,64,.85)', lineHeight:1.5, fontFamily:IF }}>{item.benefit}</div>
+          {item.denied && <div style={{ fontSize:13, marginTop:6, lineHeight:1.4, fontFamily:IF, fontWeight:600, color:item.iconColor==='#F59E0B'?'#B45309':'#B91C1C' }}>{item.denied}</div>}
         </div>
       </div>
       {!isLast && <div style={{ height:1, background:'rgba(42,30,64,.07)', marginLeft:49 }}/>}
@@ -230,14 +230,14 @@ function PermissionsScreen({ onContinue }) {
       <div style={{ padding:'28px 24px 0', flexShrink:0 }}>
         <div style={{ marginBottom:14 }}><BadgePill icon={<ShieldIcon size={14}/>} label="PERMISSIONS"/></div>
         <div style={{ marginBottom:6, color:'#2A1F3D', fontSize:27, fontWeight:800, lineHeight:1.15, letterSpacing:'-.025em', fontFamily:IF }}>{"Here's what Mimi needs to protect you — and why."}</div>
-        <div style={{ color:'rgba(42,30,64,.5)', fontSize:13, lineHeight:1.5, fontFamily:IF, marginBottom:18 }}>{"Before we ask, here's exactly what each permission does and what breaks without it."}</div>
+        <div style={{ color:'rgba(42,30,64,.8)', fontSize:15, lineHeight:1.5, fontFamily:IF, marginBottom:18 }}>{"Before we ask, here's exactly what each permission does and what breaks without it."}</div>
       </div>
       <div style={{ flex:1, overflowY:'auto', padding:'0 20px', scrollbarWidth:'none' }}>
         {PERM_GROUPS.map((g,gi) => (
           <div key={gi} style={{ marginBottom:14 }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:7 }}>
-              <span style={{ fontSize:10, fontWeight:700, letterSpacing:'.12em', textTransform:'uppercase', color:'rgba(42,30,64,.38)', fontFamily:IF }}>{g.label}</span>
-              <span style={{ fontSize:10, color:'rgba(42,30,64,.22)', fontFamily:IF }}>{'— '}{g.sublabel}</span>
+              <span style={{ fontSize:12, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:'rgba(42,30,64,.65)', fontFamily:IF }}>{g.label}</span>
+              <span style={{ fontSize:12, color:'rgba(42,30,64,.5)', fontFamily:IF }}>{'— '}{g.sublabel}</span>
             </div>
             <div style={{ ...glassCard, background:'#FFFFFF', padding:'0 14px' }}>
               {g.items.map((item,ii) => <PermissionRow key={ii} item={item} isLast={ii===g.items.length-1}/>)}
