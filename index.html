@@ -210,17 +210,17 @@ const PERM_GROUPS = [
 function PermissionRow({ item, isLast }) {
   return (
     <div>
-      <div style={{ display:'flex', alignItems:'flex-start', gap:13, padding:'14px 0' }}>
-        <div style={{ width:36, height:36, borderRadius:10, background:item.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
-          <item.Icon size={17} color={item.iconColor}/>
+      <div style={{ display:'flex', alignItems:'flex-start', gap:14, padding:'18px 0' }}>
+        <div style={{ width:40, height:40, borderRadius:11, background:item.iconBg, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginTop:1 }}>
+          <item.Icon size={18} color={item.iconColor}/>
         </div>
         <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontSize:16, fontWeight:600, color:'#2A1F3D', fontFamily:IF, marginBottom:4, lineHeight:1.3 }}>{item.name}</div>
+          <div style={{ fontSize:16, fontWeight:600, color:'#2A1F3D', fontFamily:IF, marginBottom:5, lineHeight:1.3 }}>{item.name}</div>
           <div style={{ fontSize:14, color:'rgba(42,30,64,.85)', lineHeight:1.5, fontFamily:IF }}>{item.benefit}</div>
-          {item.denied && <div style={{ fontSize:13, marginTop:6, lineHeight:1.4, fontFamily:IF, fontWeight:600, color:item.iconColor==='#F59E0B'?'#B45309':'#B91C1C' }}>{item.denied}</div>}
+          {item.denied && <div style={{ fontSize:13, marginTop:8, lineHeight:1.4, fontFamily:IF, fontWeight:600, color:item.iconColor==='#F59E0B'?'#B45309':'#B91C1C' }}>{item.denied}</div>}
         </div>
       </div>
-      {!isLast && <div style={{ height:1, background:'rgba(42,30,64,.07)', marginLeft:49 }}/>}
+      {!isLast && <div style={{ height:1, background:'rgba(42,30,64,.07)', marginLeft:54 }}/>}
     </div>
   );
 }
