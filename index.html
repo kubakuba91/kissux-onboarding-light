@@ -202,7 +202,7 @@ const PERM_GROUPS = [
   { label:'One setting to turn on', sublabel:'recommended', items:[
     { Icon:ExpandIcon, iconBg:'rgba(245,158,11,.15)', iconColor:'#F59E0B', name:'Full-screen alerts', benefit:"Override your screen mid-call so the warning is impossible to miss — even with the phone locked.", denied:"Without this, Mimi falls back to a standard notification — still there, just easier to miss." },
   ]},
-  { label:'Granted automatically', sublabel:'no dialogs — just so you know', items:[
+  { label:'Granted automatically', sublabel:'', items:[
     { Icon:WaveIcon,   iconBg:'rgba(42,30,64,.07)', iconColor:'rgba(42,30,64,.45)', name:'Run during calls', benefit:"Stay active in the background the entire time you're on the phone.", denied:null },
     { Icon:RebootIcon, iconBg:'rgba(42,30,64,.07)', iconColor:'rgba(42,30,64,.45)', name:'Start on reboot', benefit:"Resume protecting you automatically after every phone restart — no need to reopen the app.", denied:null },
   ]},
@@ -237,7 +237,7 @@ function PermissionsScreen({ onContinue }) {
           <div key={gi} style={{ marginBottom:14 }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:7 }}>
               <span style={{ fontSize:12, fontWeight:700, letterSpacing:'.1em', textTransform:'uppercase', color:'rgba(42,30,64,.65)', fontFamily:IF }}>{g.label}</span>
-              <span style={{ fontSize:12, color:'rgba(42,30,64,.5)', fontFamily:IF }}>{'— '}{g.sublabel}</span>
+              {g.sublabel && <span style={{ fontSize:12, color:'rgba(42,30,64,.5)', fontFamily:IF }}>{'— '}{g.sublabel}</span>}
             </div>
             <div style={{ ...glassCard, background:'#FFFFFF', padding:'0 14px' }}>
               {g.items.map((item,ii) => <PermissionRow key={ii} item={item} isLast={ii===g.items.length-1}/>)}
